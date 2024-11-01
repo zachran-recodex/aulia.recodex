@@ -24,7 +24,7 @@ class StudentMail extends Mailable
     public function build()
     {
         return $this->subject($this->subjectText)
-                    ->from('aulia@mail.com', 'Aulia')
+                    ->from('admin@aulia.recodex.id', 'Admin')
                     ->view('emails.student')
                     ->with([
                         'messageText' => $this->messageText,
