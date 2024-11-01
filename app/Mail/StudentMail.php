@@ -11,22 +11,18 @@ class StudentMail extends Mailable
     use Queueable, SerializesModels;
 
     public $student;
-    public $subjectText;
     public $messageText;
-    public $sender;
 
-    public function __construct($student, $subject, $message, $sender)
+    public function __construct($student, $messageText)
     {
         $this->student = $student;
-        $this->subjectText = $subject;
-        $this->messageText = $message;
-        $this->sender = $sender;
+        $this->messageText = $messageText;
     }
 
     public function build()
     {
-        return $this->from($this->sender['email'], $this->sender['name'])
-                    ->subject($this->subjectText)
+        return $this->from('admin@aulia.recodex.id', config('app.name')) // Ganti dengan alamat email Anda
+                    ->subject('Informasi Mahasiswa')
                     ->view('emails.student')
                     ->with([
                         'messageText' => $this->messageText,

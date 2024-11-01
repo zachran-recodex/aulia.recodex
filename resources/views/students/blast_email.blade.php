@@ -21,12 +21,12 @@
         <form action="{{ route('students.sendEmails') }}" method="POST">
             @csrf
             <div class="mb-3">
-                <label for="subject" class="form-label">Email Subject</label>
+                <label for="subject" class="form-label">Subject</label>
                 <input type="text" class="form-control" id="subject" name="subject" required>
             </div>
 
             <div class="mb-3">
-                <label for="message" class="form-label">Email Message</label>
+                <label for="message" class="form-label">Message</label>
                 <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
             </div>
 

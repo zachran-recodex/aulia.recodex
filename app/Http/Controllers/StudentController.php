@@ -7,7 +7,9 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Mail\StudentMail;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log; // Tambahkan ini
 
 class StudentController extends Controller
 {
@@ -34,35 +36,62 @@ class StudentController extends Controller
 
     public function sendEmails(Request $request)
     {
+        // Validasi input
         $request->validate([
             'subject' => 'required|string|max:255',
             'message' => 'required|string',
         ]);
 
+        // Ambil semua data mahasiswa dari database
         $students = Student::all();
-        $senders = [
-            ['name' => 'Sender 1', 'email' => 'sender1@example.com'],
-            ['name' => 'Sender 2', 'email' => 'sender2@example.com'],
-            ['name' => 'Sender 3', 'email' => 'sender3@example.com'],
-            ['name' => 'Sender 4', 'email' => 'sender4@example.com'],
-            ['name' => 'Sender 5', 'email' => 'sender5@example.com'],
-            ['name' => 'Sender 6', 'email' => 'sender6@example.com'],
-            ['name' => 'Sender 7', 'email' => 'sender7@example.com'],
-            ['name' => 'Sender 8', 'email' => 'sender8@example.com'],
-            ['name' => 'Sender 9', 'email' => 'sender9@example.com'],
-            ['name' => 'Sender 10', 'email' => 'sender10@example.com'],
-        ];
 
-        $batchSize = 100; // Tentukan jumlah penerima per batch
-        $chunks = $students->chunk($batchSize); // Pecah data menjadi batch
+        foreach ($students as $student) {
+            // Kirim email
+            Mail::to($student->email)->queue(new StudentMail($student, $request->message));
 
-        foreach ($chunks as $chunk) {
-            foreach ($chunk as $index => $student) {
-                $sender = $senders[$index % count($senders)];
-                Mail::to($student->email)->queue(new StudentMail($student, $request->subject, $request->message, $sender));
-            }
+            // Simpan log email
+            DB::table('email_logs')->insert([
+                'email' => $student->email,
+                'subject' => $request->subject,
+                'message' => $request->message,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Simpan salinan email ke folder "Sent" menggunakan IMAP
+            $this->saveToSentMailbox($student->email, $request->subject, $request->message);
         }
 
         return redirect()->back()->with('success', 'Blast email sedang dikirim.');
+    }
+
+    // Method untuk menyimpan salinan email ke folder "Sent"
+    private function saveToSentMailbox($toEmail, $subject, $message)
+    {
+        $imapHost = '{mail.aulia.recodex.id:993/imap/ssl}'; // Sesuaikan dengan konfigurasi cPanel
+        $username = env('MAIL_USERNAME'); // Sesuaikan dengan username cPanel
+        $password = env('MAIL_PASSWORD'); // Sesuaikan dengan password cPanel
+
+        // Buka koneksi IMAP
+        $mailbox = imap_open($imapHost . 'INBOX.Sent', $username, $password);
+
+        if ($mailbox) {
+            $headers = "From: " . config('mail.from.address') . "\r\n";
+            $headers .= "To: {$toEmail}\r\n";
+            $headers .= "Subject: {$subject}\r\n";
+            $headers .= "Date: " . date('r') . "\r\n";
+
+            // Format pesan lengkap dengan header
+            $emailMessage = $headers . "\r\n" . $message;
+
+            // Simpan email ke folder "Sent"
+            imap_append($mailbox, $imapHost . 'INBOX.Sent', $emailMessage);
+
+            // Tutup koneksi IMAP
+            imap_close($mailbox);
+        } else {
+            // Jika gagal, log error atau kirimkan notifikasi
+            Log::error('Gagal menyimpan email ke folder Sent melalui IMAP.');
+        }
     }
 }
