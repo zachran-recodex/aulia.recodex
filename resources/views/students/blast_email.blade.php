@@ -10,7 +10,7 @@
 
 <body>
     <div class="container mt-5">
-        <h2>Blast Email to Students</h2>
+        <h2>Blast Email untuk Keperluan Pekerjaan Aulia anak UT banget</h2>
 
         @if (session('success'))
             <div class="alert alert-success">
