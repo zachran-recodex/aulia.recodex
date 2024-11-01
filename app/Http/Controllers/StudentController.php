@@ -73,7 +73,7 @@ class StudentController extends Controller
         $password = env('MAIL_PASSWORD'); // Sesuaikan dengan password cPanel
 
         // Buka koneksi IMAP
-        $mailbox = imap_open($imapHost . 'INBOX.Sent', $username, $password);
+        $mailbox = \imap_open($imapHost . 'INBOX.Sent', $username, $password);
 
         if ($mailbox) {
             $headers = "From: " . config('mail.from.address') . "\r\n";
