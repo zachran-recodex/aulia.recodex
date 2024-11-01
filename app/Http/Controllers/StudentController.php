@@ -40,11 +40,29 @@ class StudentController extends Controller
         ]);
 
         $students = Student::all();
+        $senders = [
+            ['name' => 'Sender 1', 'email' => 'sender1@example.com'],
+            ['name' => 'Sender 2', 'email' => 'sender2@example.com'],
+            ['name' => 'Sender 3', 'email' => 'sender3@example.com'],
+            ['name' => 'Sender 4', 'email' => 'sender4@example.com'],
+            ['name' => 'Sender 5', 'email' => 'sender5@example.com'],
+            ['name' => 'Sender 6', 'email' => 'sender6@example.com'],
+            ['name' => 'Sender 7', 'email' => 'sender7@example.com'],
+            ['name' => 'Sender 8', 'email' => 'sender8@example.com'],
+            ['name' => 'Sender 9', 'email' => 'sender9@example.com'],
+            ['name' => 'Sender 10', 'email' => 'sender10@example.com'],
+        ];
 
-        foreach ($students as $student) {
-            Mail::to($student->email)->send(new StudentMail($student, $request->subject, $request->message));
+        $batchSize = 100; // Tentukan jumlah penerima per batch
+        $chunks = $students->chunk($batchSize); // Pecah data menjadi batch
+
+        foreach ($chunks as $chunk) {
+            foreach ($chunk as $index => $student) {
+                $sender = $senders[$index % count($senders)];
+                Mail::to($student->email)->queue(new StudentMail($student, $request->subject, $request->message, $sender));
+            }
         }
 
-        return redirect()->back()->with('success', 'Blast email telah dikirim ke semua mahasiswa.');
+        return redirect()->back()->with('success', 'Blast email sedang dikirim.');
     }
 }

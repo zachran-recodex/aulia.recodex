@@ -13,22 +13,23 @@ class StudentMail extends Mailable
     public $student;
     public $subjectText;
     public $messageText;
+    public $sender;
 
-    public function __construct($student, $subject, $message)
+    public function __construct($student, $subject, $message, $sender)
     {
         $this->student = $student;
         $this->subjectText = $subject;
         $this->messageText = $message;
+        $this->sender = $sender;
     }
 
     public function build()
     {
-        return $this->subject($this->subjectText)
-                    ->from('admin@aulia.recodex.id', 'Admin')
+        return $this->from($this->sender['email'], $this->sender['name'])
+                    ->subject($this->subjectText)
                     ->view('emails.student')
                     ->with([
                         'messageText' => $this->messageText,
                     ]);
     }
 }
-
